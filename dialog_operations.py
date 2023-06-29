@@ -3,10 +3,9 @@ from google.cloud import dialogflow
 
 
 def detect_intent_texts(project_id, session_id, texts, language_code='ru'):
+
     session_client = dialogflow.SessionsClient()
-
     session = session_client.session_path(project_id, session_id)
-
 
     for text in texts:
         text_input = dialogflow.TextInput(text=text, language_code=language_code)
@@ -43,3 +42,4 @@ def create_intent(project_id, display_name, training_phrases_parts, message_text
     intents_client.create_intent(
         request={"parent": parent, "intent": intent}
     )
+
