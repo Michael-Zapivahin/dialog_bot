@@ -1,6 +1,7 @@
-
-import os
-
+import random, os
+from dotenv import load_dotenv
+import vk_api as vk
+from vk_api.longpoll import VkLongPoll, VkEventType
 from telegram import Update
 from telegram.ext import (
     Updater,
@@ -9,7 +10,6 @@ from telegram.ext import (
     MessageHandler,
     Filters
 )
-from dotenv import load_dotenv
 from dialog_operations import detect_intent_texts, dialogflow
 
 
@@ -42,20 +42,45 @@ def detect_intent_texts(project_id, session_id, texts, language_code='ru'):
         response = session_client.detect_intent(
             request={"session": session, "query_input": query_input}
         )
-        return response.query_result.fulfillment_text
+        if response.query_result.intent.is_fallback:
+            return
+        else:
+            return response.query_result.fulfillment_text
 
+
+def echo(event, vk_api, client_id, project_id):
+    answer_text = detect_intent_texts(
+                        project_id,
+                        client_id,
+                        [event.text],
+    )
+    if not answer_text is None:
+        vk_api.messages.send(
+            user_id=event.user_id,
+            message=f'{answer_text}',
+            random_id=random.randint(1,1000)
+        )
 
 
 def main():
     load_dotenv()
-    token = os.environ.get('BOT_TOKEN')
+    vk_token = os.environ.get('VK_KEY')
+    bot_token = os.environ.get('BOT_TOKEN')
+    project_id = os.environ.get('PROJECT_ID')
 
-    updater = Updater(token)
-    dispatcher = updater.dispatcher
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, bot_answer))
-    updater.start_polling()
-    updater.idle()
+    # updater = Updater(bot_token)
+    # dispatcher = updater.dispatcher
+    # dispatcher.add_handler(CommandHandler("start", start))
+    # dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, bot_answer))
+    # updater.start_polling()
+    # updater.idle()
+
+    vk_session = vk.VkApi(token=vk_token)
+    vk_api = vk_session.get_api()
+    longpoll = VkLongPoll(vk_session)
+    for event in longpoll.listen():
+        if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+            echo(event, vk_api, vk_session.client_secret, project_id)
 
 
 if __name__ == '__main__':

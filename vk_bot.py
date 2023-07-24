@@ -9,28 +9,25 @@ from dotenv import load_dotenv
 from bot import detect_intent_texts
 
 
-def send_answer(project_id, text, user_id):
-
-    answer = detect_intent_texts(
-                        project_id=project_id,
-                        session_id=user_id,
-                        texts=[text]
+def echo(event, vk_api):
+    vk_api.messages.send(
+        user_id=event.user_id,
+        message=event.text,
+        random_id=random.randint(1,1000)
     )
-    print(text, answer)
 
 
+if __name__ == "__main__":
 
-def main():
     load_dotenv()
     token = os.environ.get('VK_KEY')
-    project_id = os.environ.get('PROJECT_ID')
     vk_session = vk.VkApi(token=token)
-    long_poll = VkLongPoll(vk_session)
-    for event in long_poll.listen():
-        if event.type == VkEventType.MESSAGE_NEW:
-            send_answer(project_id=project_id, text=event.text, user_id=event.user_id)
+    vk_api = vk_session.get_api()
+    longpoll = VkLongPoll(vk_session)
+    for event in longpoll.listen():
+        if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+            echo(event, vk_api)
 
 
-if __name__ == '__main__':
-    main()
+
 
