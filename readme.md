@@ -24,6 +24,7 @@ GOOGLE_APPLICATION_CREDENTIALS: link to Google Cloud service account
 PROJECT_ID: ID project on Google Cloud 
 BOT_TOKEN: telegram bot token
 VK_TOKEN: VK goup token
+TG_CHAT_ID: Chat ID for logs.
 ```  
 
 # Start
