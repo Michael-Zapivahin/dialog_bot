@@ -10,39 +10,24 @@ from logging.handlers import RotatingFileHandler
 from requests.exceptions import HTTPError
 
 from dialog_operations import detect_intent_texts
+from logger import TelegramLogsHandler, processing_errors
 
 
 logger = logging.getLogger(__name__)
 
 
-class TelegramLogsHandler(logging.Handler):
-    def __init__(self, bot, chat_id):
-        super().__init__()
-        self.bot = bot
-        self.chat_id = chat_id
-
-    def emit(self, record):
-        log_entry = self.format(record)
-        self.bot.send_message(chat_id=self.chat_id, text=log_entry)
-
-
-def echo(event, vk_api, client_id, project_id):
-    try:
-        answer_text = detect_intent_texts(
-                            project_id,
-                            client_id,
-                            [event.text],
+def get_question_answer(event, vk_api, client_id, project_id):
+    answer_text = detect_intent_texts(
+                        project_id,
+                        client_id,
+                        [event.text],
+    )
+    if answer_text is not None:
+        vk_api.messages.send(
+            user_id=event.user_id,
+            message=answer_text,
+            random_id=random.randint(1, 1000)
         )
-        if answer_text is not None:
-            vk_api.messages.send(
-                user_id=event.user_id,
-                message=answer_text,
-                random_id=random.randint(1, 1000)
-            )
-    except HTTPError or ConnectionError as error:
-        logger.error(f'Network error: {error}')
-    except Exception as error:
-        logger.exception(f'The bot stopped with error: {error}')
 
 
 def main():
@@ -72,7 +57,12 @@ def main():
     longpoll = VkLongPoll(vk_session)
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-            echo(event, vk_api, vk_session.client_secret, project_id)
+            try:
+                get_question_answer(event, vk_api, vk_session.client_secret, project_id)
+            except HTTPError or ConnectionError as error:
+                logger.error(f'Network error: {error}')
+            except Exception as error:
+                logger.exception(f'The bot stopped with error: {error}')
 
 
 if __name__ == '__main__':

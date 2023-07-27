@@ -30,17 +30,17 @@ TG_CHAT_ID: Chat ID for logs.
 # Start
 
 ```python
-python bot.py # Telegram-bot
-python vk_dialogflow.py # VK - bot
+python tg_dialogflow_bot.py # Telegram-bot
+python vk_dialogflow_bot.py # VK - bot
 ```
 
 # Teaching bot 
+Script `upload_questions.py` upload new answers and questions to service DialogFlow.
+You can describe your file from the command line
 
 ```python
-python upload_questions.py
+python upload_questions.py --questions_path quest.json
 ```
-  
-Script `upload_questions.py` upload new answers and questions to service DialogFlow.   
 
 ## The aim of the project 
 The code is written for educational purposes on the online course for web developers [Devman практика Python](https://dvmn.org/)

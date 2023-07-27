@@ -12,23 +12,18 @@ from telegram.ext import (
     Filters
 )
 from dotenv import load_dotenv
-from dialog_operations import detect_intent_texts, dialogflow
+from dialog_operations import detect_intent_texts
 from logging.handlers import RotatingFileHandler
 from requests.exceptions import HTTPError
+
+from logger import TelegramLogsHandler
 
 
 logger = logging.getLogger(__name__)
 
 
-class TelegramLogsHandler(logging.Handler):
-    def __init__(self, bot, chat_id):
-        super().__init__()
-        self.bot = bot
-        self.chat_id = chat_id
-
-    def emit(self, record):
-        log_entry = self.format(record)
-        self.bot.send_message(chat_id=self.chat_id, text=log_entry)
+def processing_errors(bot, update, telegram_error):
+    logger.error(f'telegram error: {telegram_error}')
 
 
 def start(update: Update, context: CallbackContext):
@@ -38,33 +33,13 @@ def start(update: Update, context: CallbackContext):
 
 
 def bot_answer(update: Update, context: CallbackContext):
-    try:
-        message_text = [update.message.text]
-        answer_text = detect_intent_texts(
-                            os.environ.get('PROJECT_ID'),
-                            update.effective_user,
-                            message_text
-        )
-        update.message.reply_text(answer_text)
-    except HTTPError or ConnectionError as error:
-        logger.error(f'Network error: {error}')
-    except Exception as error:
-        logger.exception(f'The bot stopped with error: {error}')
-
-
-def detect_intent_texts(project_id, session_id, texts, language_code='ru'):
-    session_client = dialogflow.SessionsClient()
-
-    session = session_client.session_path(project_id, session_id)
-
-    for text in texts:
-        text_input = dialogflow.TextInput(text=text, language_code=language_code)
-        query_input = dialogflow.QueryInput(text=text_input)
-        response = session_client.detect_intent(
-            request={"session": session, "query_input": query_input}
-        )
-        return response.query_result.fulfillment_text
-
+    message_text = [update.message.text]
+    answer_text = detect_intent_texts(
+                        os.environ.get('PROJECT_ID'),
+                        update.effective_user,
+                        message_text
+    )
+    update.message.reply_text(answer_text)
 
 
 def main():
@@ -91,6 +66,7 @@ def main():
     dispatcher = updater.dispatcher
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, bot_answer))
+    dispatcher.add_error_handler(processing_errors)
     updater.start_polling()
     updater.idle()
 
