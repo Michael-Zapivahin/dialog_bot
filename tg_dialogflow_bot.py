@@ -34,12 +34,12 @@ def start(update: Update, context: CallbackContext):
 
 def bot_answer(update: Update, context: CallbackContext):
     message_text = [update.message.text]
-    answer_text = detect_intent_texts(
+    answer = detect_intent_texts(
                         os.environ.get('PROJECT_ID'),
                         update.effective_user,
                         message_text
     )
-    update.message.reply_text(answer_text)
+    update.message.reply_text(answer.fulfillment_text)
 
 
 def main():

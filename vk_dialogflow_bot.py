@@ -17,15 +17,27 @@ logger = logging.getLogger(__name__)
 
 
 def get_question_answer(event, vk_api, client_id, project_id):
-    answer_text = detect_intent_texts(
+    answer = detect_intent_texts(
                         project_id,
                         client_id,
                         [event.text],
     )
-    if answer_text is not None:
+    if not answer.intent.is_fallback:
         vk_api.messages.send(
             user_id=event.user_id,
-            message=answer_text,
+            message=answer.fulfillment_text,
+            random_id=random.randint(1, 1000)
+        )
+
+
+def get_ai_answer(event, vk_api, project_id, ):
+    text = [event.text]
+    user_id = event.user_id
+    ai_answer = detect_intent_texts(project_id, user_id, text)
+    if not ai_answer.intent.is_fallback:
+        vk_api.messages.send(
+            user_id=event.user_id,
+            message=ai_answer.fulfillment_text,
             random_id=random.randint(1, 1000)
         )
 
