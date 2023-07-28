@@ -10,7 +10,7 @@ from logging.handlers import RotatingFileHandler
 from requests.exceptions import HTTPError
 
 from dialog_operations import detect_intent_texts
-from logger import TelegramLogsHandler, processing_errors
+from logger import TelegramLogsHandler
 
 
 logger = logging.getLogger(__name__)

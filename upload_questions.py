@@ -19,16 +19,16 @@ def main():
         questions_json = file.read()
 
     questions = json.loads(questions_json)
-    for key, value in questions.items():
+    for question_name, question in questions.items():
         try:
             create_intent(
                 project_id,
-                key,
-                value['questions'],
-                value['answer'],
+                question_name,
+                question['questions'],
+                question['answer'],
             )
         except google.api_core.exceptions.InvalidArgument:
-            print(f'Intent with the display name "{key}" already exists.')
+            print(f'Intent with the display name "{question_name}" already exists.')
 
 
 if __name__ == '__main__':
